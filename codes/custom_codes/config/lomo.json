@@ -1,0 +1,21 @@
+{
+  "out_dir": "reports_lomo",
+  "min_test_samples": 50,
+  "val_frac": 0.1,
+
+  "phase2_epochs": 30,
+  "phase3_epochs": 40,
+  "batch_size": 32,
+  "lr": 2e-4,
+  "weight_decay": 1e-6,
+  "grad_clip": 1.0,
+  "seed": 42,
+
+  "lambda_reg": 0.5,
+  "entropy_beta": 0.01,
+  "auto_pos_weight": true,
+  "pos_weight": 18.5,
+
+  "warm_start_core_only": false,
+  "ensemble_alpha": 0.5
+}

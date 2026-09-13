@@ -1,0 +1,25 @@
+{
+  "train_txt": "../../custom_dataset/Anthem_dataset/train_data.txt",
+  "test_txt": "../../custom_dataset/Anthem_dataset/test_data.txt",
+  "pseudo_csv": "../../custom_dataset/Anthem_dataset/mhc_ii_pseudo.csv",
+  "out_dir": "reports_phase2_affinity_from_scratch",
+
+  "n_folds": 5,
+  "epochs": 30,
+  "batch_size": 32,
+  "lr": 2e-4,
+  "weight_decay": 1e-6,
+  "grad_clip": 1.0,
+  "seed": 42,
+
+  "dropout": 0.5,
+  "pep_channels": [64, 128],
+  "core_kernel": 9,
+  "pseudo_channels": [32, 64],
+  "mlp_hidden": 128,
+
+  "lambda_reg": 0.1,
+  "entropy_beta": 0.01,
+  "auto_pos_weight": true,
+  "pos_weight": 18.5
+}

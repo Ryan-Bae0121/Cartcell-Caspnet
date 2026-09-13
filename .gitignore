@@ -1,0 +1,6 @@
+__pycache__/
+*.pyc
+**/checkpoints/
+logs/
+custom_dataset/Anthem_dataset/lomo_pool.txt
+.DS_Store

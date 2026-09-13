@@ -1,0 +1,14 @@
+{
+  "fold": 1,
+  "best_epoch": null,
+  "best_val_loss": null,
+  "val_metrics": {
+    "n": 5208,
+    "n_pos": 261,
+    "auroc": 0.8337786668959167,
+    "auprc": 0.28247150778006136,
+    "pearson_r": 0.5443105411890617,
+    "mse": 0.05004289173965917
+  },
+  "note": "backfilled from checkpoint after the training process was killed mid fold-3 (machine sleep/shutdown) -- this fold itself completed all 40 epochs per logs/phase3_train.log before the interruption."
+}
