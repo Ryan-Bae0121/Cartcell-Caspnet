@@ -48,7 +48,9 @@ from models.phase2 import build_from_config as build_phase2_from_config
 from models.phase3 import build_from_config as build_phase3_from_config, warm_start_from_phase2
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEVICE = torch.device("cpu")
+# Auto-detects a GPU (e.g. on Colab) and falls back to CPU otherwise; force with
+# DEVICE=cpu / DEVICE=cuda if the auto-detect picks the wrong one.
+DEVICE = torch.device(os.environ.get("DEVICE") or ("cuda" if torch.cuda.is_available() else "cpu"))
 DATASET_DIR = os.path.normpath(os.path.join(HERE, "..", "..", "custom_dataset", "Anthem_dataset"))
 POOL_PATH = os.path.join(DATASET_DIR, "lomo_pool.txt")
 
@@ -212,7 +214,7 @@ def main():
 
     pool_path = _build_pool()
     dp = DataProvider(pool_path, _resolve(cfg["pseudo_csv"]))
-    print(f"LOMO pool: {len(dp)} rows, {len(set(dp.alleles))} alleles")
+    print(f"LOMO pool: {len(dp)} rows, {len(set(dp.alleles))} alleles | device {DEVICE}")
 
     vc = pd.Series(dp.alleles).value_counts()
     eligible = [a for a in vc.index if vc[a] >= cfg["min_test_samples"]]

@@ -26,7 +26,9 @@ from models.phase2 import build_from_config
 from resume_utils import fold_paths, fold_is_done, load_fold_result, save_fold_result
 
 HERE = os.path.dirname(os.path.abspath(__file__))
-DEVICE = torch.device("cpu")
+# Auto-detects a GPU (e.g. on Colab) and falls back to CPU otherwise; force with
+# DEVICE=cpu / DEVICE=cuda if the auto-detect picks the wrong one.
+DEVICE = torch.device(os.environ.get("DEVICE") or ("cuda" if torch.cuda.is_available() else "cpu"))
 
 
 def _resolve(p):
