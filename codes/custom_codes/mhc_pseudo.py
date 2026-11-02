@@ -121,11 +121,15 @@ class PseudoSeqTable:
         return set(self._rows)
 
 
-def build_pseudo_csv(allele_keys, path=DEFAULT_CSV):
+def build_pseudo_csv(allele_keys, path=DEFAULT_CSV, allow_placeholder=True):
     """Write/refresh the pseudo-sequence CSV for ``allele_keys``.
 
-    Existing ``real`` rows are preserved; every other required key gets a
-    deterministic placeholder. Returns the ``PseudoSeqTable``.
+    Existing ``real`` rows are preserved. A key with no real sequence gets a
+    deterministic placeholder, unless ``allow_placeholder`` is False -- then it
+    is omitted entirely, so the caller's "keep alleles present in the table"
+    filter drops its rows instead of training on invented sequences.
+
+    Returns the ``PseudoSeqTable``.
     """
     existing = {}
     if os.path.exists(path):
@@ -137,7 +141,7 @@ def build_pseudo_csv(allele_keys, path=DEFAULT_CSV):
     for key in sorted(set(allele_keys)):
         if key in existing and existing[key][1] == "real":
             rows.append((key, existing[key][0], "real"))
-        else:
+        elif allow_placeholder:
             rows.append((key, placeholder_pseudo(key), "placeholder"))
 
     os.makedirs(os.path.dirname(path), exist_ok=True)

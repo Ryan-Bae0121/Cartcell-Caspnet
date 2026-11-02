@@ -33,19 +33,78 @@ class CoreRegister(nn.Module):
     ``T = L - core_kernel + 1`` candidate-position feature columns; a parallel
     1-channel conv scores each position; softmax over T gives ``pos_prob``;
     the core vector is the pos_prob-weighted sum of the position columns.
+
+    Allele conditioning (``mhc_dim`` set)
+    -------------------------------------
+    With ``mhc_dim=None`` the position score comes from the peptide alone, so
+    ``pos_prob`` cannot depend on the allele -- measured, not assumed: corrupting
+    the MHC input (zero / permuted / swapped / fresh fingerprint) leaves the
+    predicted core unmoved for 100% of peptides (``ablate_pseudo.py``). Any
+    allele-dependent register behaviour is therefore architecturally impossible,
+    with real pseudo-sequences as much as with placeholders.
+
+    Passing ``mhc_dim`` adds a cosine similarity between each candidate core's
+    features and a projection of ``mhc_vec``, i.e. "which of the T candidate
+    9-mers fits this pocket best", behind a single learnable gate:
+
+        score = score_conv(x) + g * cos(feat_t, W mhc_vec)
+
+    Three deliberate choices:
+
+    * The term is *content-based*. A per-position bias (``score += W mhc_vec``
+      with ``W`` mapping to T) would instead memorise "allele A likes index 3",
+      which says nothing about the residues at that index. A position-constant
+      offset would also cancel in the softmax entirely.
+    * Both vectors are L2-normalised, so the term is a bounded [-1, 1] cosine
+      and its scale does not depend on the feature magnitudes. An unnormalised
+      dot product needed ``W`` near unit scale to reach parity with
+      ``score_conv`` here (measured: ``feat`` std 0.087, ``score_conv`` std
+      0.068), which makes the pathway's influence an accident of initialisation.
+    * ``cond_gate`` is zero-initialised, so at step 0 the conditioned model is
+      *mathematically identical* to the unconditioned one: peptide-side weights
+      stay warm-startable from existing checkpoints and training only has to
+      learn the added pathway. ``mhc_proj`` keeps its default init on purpose --
+      zero-initialising *both* would make each one's gradient proportional to
+      the other's zero and the pathway could never start learning. The learned
+      ``cond_gate`` value is also directly reportable: it is how strongly the
+      trained model chose to let the pocket move the register.
+
+    ``mhc_dim=None`` also keeps the ``state_dict`` byte-identical to the
+    pre-conditioning model, so old checkpoints load with no key mismatch -- that
+    is the unconditioned arm of the ablation, not a legacy path.
     """
 
-    def __init__(self, in_ch, core_dim=128, core_kernel=9):
+    def __init__(self, in_ch, core_dim=128, core_kernel=9, mhc_dim=None):
         super().__init__()
         self.core_kernel = core_kernel
         self.core_dim = core_dim
         self.feat_conv = nn.Conv1d(in_ch, core_dim, kernel_size=core_kernel)
         self.score_conv = nn.Conv1d(in_ch, 1, kernel_size=core_kernel)
+        if mhc_dim:
+            self.mhc_proj = nn.Linear(mhc_dim, core_dim)
+            self.cond_gate = nn.Parameter(torch.zeros(1))
+        else:
+            self.mhc_proj = None
+            self.cond_gate = None
 
-    def forward(self, x):
+    @property
+    def conditioned(self):
+        return self.mhc_proj is not None
+
+    def forward(self, x, mhc_vec=None):
         # x: (B, in_ch, L)
         feat = self.feat_conv(x)                     # (B, core_dim, T)
         score = self.score_conv(x).squeeze(1)        # (B, T)
+        if self.mhc_proj is not None:
+            if mhc_vec is None:
+                raise ValueError(
+                    "CoreRegister was built with mhc_dim set but forward() got no "
+                    "mhc_vec -- the caller must encode the allele before selecting "
+                    "the core, not after."
+                )
+            m = F.normalize(self.mhc_proj(mhc_vec), dim=1)      # (B, core_dim)
+            cos = (F.normalize(feat, dim=1) * m.unsqueeze(2)).sum(dim=1)  # (B, T) in [-1, 1]
+            score = score + self.cond_gate * cos
         pos_prob = F.softmax(score, dim=1)           # (B, T)
         core_vec = torch.bmm(feat, pos_prob.unsqueeze(2)).squeeze(2)  # (B, core_dim)
         return core_vec, pos_prob

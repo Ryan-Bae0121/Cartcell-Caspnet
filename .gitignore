@@ -1,6 +1,29 @@
+# Python
 __pycache__/
-*.pyc
-**/checkpoints/
+*.py[cod]
+.ipynb_checkpoints/
+
 logs/
+
+# Model weights: 24MB per full run and regenerable from the configs. Keeping
+# them would re-add the whole set to history on every retrain.
+**/checkpoints/
+*.pt
+
+# Regenerable by data_pipeline.py from raw/merged_data_without.csv
 custom_dataset/Anthem_dataset/lomo_pool.txt
+
+# Per-row prediction dumps. These are intermediate -- every number quoted in
+# the reports is already in the *_summary.json / fold_report_*.json / *metrics*
+# files, which ARE tracked. Re-derive these by rerunning the training script.
+oof_fold*.tsv
+test_fold*.tsv
+oof_predictions.tsv
+test_predictions.tsv
+variant_predictions.tsv
+per_case_summary.tsv
+
+# OS / editor
+Thumbs.db
+desktop.ini
 .DS_Store

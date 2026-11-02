@@ -97,11 +97,20 @@ def run(cfg, verbose=True):
     allele_keys = sorted(df["HLA"].unique())
     log(f"[7] alleles after normalisation: {len(allele_keys)} "
         f"(from {df['mhc'].nunique()} raw spellings)")
-    table = build_pseudo_csv(allele_keys, _resolve(cfg["pseudo_csv"]))
+    # require_real_pseudoseq: drop alleles with no real 34-mer instead of
+    # back-filling a placeholder (see build_real_pseudo.py).
+    allow_ph = not cfg.get("require_real_pseudoseq", False)
+    table = build_pseudo_csv(allele_keys, _resolve(cfg["pseudo_csv"]),
+                             allow_placeholder=allow_ph)
     keep = df["HLA"].isin(table.keys)
+    n_dropped_allele = int((~keep).sum())
     df = df[keep].copy()
     log(f"    rows with pseudo-seq: {len(df)}  "
-        f"({table.n_placeholder}/{len(table)} alleles are placeholders)")
+        f"({table.n_placeholder}/{len(table)} alleles are placeholders"
+        f"{'' if allow_ph else '; placeholders disabled'})")
+    if n_dropped_allele:
+        log(f"    dropped {n_dropped_allele} rows from "
+            f"{len(allele_keys) - len(table)} alleles with no real pseudo-sequence")
 
     # 8. de-duplicate (allele, peptide) by geometric mean of ic50_numeric
     n_before = len(df)

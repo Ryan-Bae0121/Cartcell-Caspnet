@@ -32,6 +32,7 @@ from sklearn.model_selection import KFold
 from data_provider import DataProvider
 from evaluate import evaluate, pooled_metrics
 from losses import Phase3Loss
+from train_phase2 import selection_score
 from models.phase3 import build_from_config, warm_start_from_phase2
 from resume_utils import fold_paths, fold_is_done, load_fold_result, save_fold_result
 
@@ -53,7 +54,8 @@ def _env_bool(name, default):
 
 
 def load_config(path=None):
-    path = path or os.path.join(HERE, "config", "phase3.json")
+    path = path or os.environ.get("PHASE3_CONFIG") or os.path.join(
+        HERE, "config", "phase3.json")
     with open(path) as fh:
         cfg = json.load(fh)
     # env overrides for smoke tests / ad-hoc runs
@@ -125,7 +127,11 @@ def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path):
     opt = torch.optim.AdamW(model.parameters(), lr=cfg["lr"],
                             weight_decay=cfg["weight_decay"])
 
-    best = {"val_loss": float("inf"), "epoch": -1, "metrics": None}
+    _sel = cfg.get("early_stop_metric", "auprc")
+    best = {"val_loss": float("inf"), "epoch": -1, "metrics": None,
+            # val_loss is minimised, every other metric is maximised
+            "score": float("inf") if _sel == "val_loss" else -float("inf"),
+            "select_on": _sel if isinstance(_sel, str) else "+".join(_sel)}
     for epoch in range(cfg["epochs"]):
         model.train()
         t0 = time.time()
@@ -163,8 +169,20 @@ def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path):
               f"train_loss {run_loss/max(n_batches,1):.4f} | val_loss {val_loss:.4f} | "
               f"AUROC {vm['auroc']} r {vm['pearson_r']} | {time.time()-t0:.1f}s")
 
-        if val_loss < best["val_loss"]:
-            best = {"val_loss": val_loss, "epoch": epoch, "metrics": vm}
+        # Same selection fix as train_phase2.py -- and it must stay identical
+        # here, because Phase2-vs-Phase3 is the comparison the project reports.
+        # lambda_reg differs between them (0.1 vs 0.5), so a val_loss criterion
+        # damages the two models by *different* amounts and the measured gap
+        # stops being about the architectures.
+        score, bigger_is_better, sel = selection_score(cfg, vm, val_loss)
+        if bigger_is_better:
+            better = score > best.get("score", -float("inf"))
+        else:
+            better = score < best.get("score", float("inf"))
+
+        if better:
+            best = {"score": score, "select_on": sel, "val_loss": val_loss,
+                    "epoch": epoch, "metrics": vm}
             torch.save(model.state_dict(), ckpt_path)
 
     # reload best for OOF / test
@@ -211,7 +229,8 @@ def main():
         print(f"\n=== fold {fold} | train {len(tr_idx)} val {len(va_idx)} ===")
         model, best, oof = train_one_fold(cfg, train_dp, tr_idx, va_idx, fold, paths["ckpt"])
         report = {"fold": fold, "best_epoch": best["epoch"],
-                  "best_val_loss": best["val_loss"], "val_metrics": best["metrics"]}
+                  "best_val_loss": best["val_loss"], "val_metrics": best["metrics"],
+                  "selected_on": best["select_on"], "selected_score": best["score"]}
         fold_reports.append(report)
         oof_frames.append(oof)
 

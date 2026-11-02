@@ -52,12 +52,18 @@ class Phase3Model(nn.Module):
         n_core_caps=16,
         n_mhc_caps=8,
         dropout=0.3,
+        core_conditioning=False,
     ):
         super().__init__()
         # Same names/shapes as Phase2Model -> warm-startable.
         self.pep_stem, pep_out = conv_stack(pep_in, list(pep_channels), kernel_size=3)
-        self.core = CoreRegister(pep_out, core_dim=pep_out, core_kernel=core_kernel)
         self.pseudo_encoder = PseudoSeqEncoder(pseudo_in, tuple(pseudo_channels))
+        # NB: ``self.core.mhc_proj`` (allele conditioning inside CoreRegister) is a
+        # different tensor from ``self.mhc_proj`` below (MHC capsule projection).
+        self.core = CoreRegister(
+            pep_out, core_dim=pep_out, core_kernel=core_kernel,
+            mhc_dim=self.pseudo_encoder.out_dim if core_conditioning else None,
+        )
 
         self.full_pool = nn.AdaptiveAvgPool1d(1)
         self.dropout = nn.Dropout(dropout)
@@ -84,9 +90,9 @@ class Phase3Model(nn.Module):
 
     def forward(self, peptide, pseudo):
         pep_feat = self.pep_stem(peptide)                # (B, C, L)
-        core_vec, pos_prob = self.core(pep_feat)         # (B, C), (B, T)
+        mhc_vec = self.pseudo_encoder(pseudo)             # (B, C2)  -- before the core
+        core_vec, pos_prob = self.core(pep_feat, mhc_vec)  # (B, C), (B, T)
         full_vec = self.full_pool(pep_feat).squeeze(2)   # (B, C)
-        mhc_vec = self.pseudo_encoder(pseudo)             # (B, C2)
 
         full_caps = self._to_caps(self.full_proj, full_vec, self.n_full_caps)  # (B, 32, cap_dim)
         core_caps = self._to_caps(self.core_proj, core_vec, self.n_core_caps)  # (B, 16, cap_dim)
@@ -117,6 +123,7 @@ def build_from_config(cfg):
         n_core_caps=cfg.get("n_core_caps", 16),
         n_mhc_caps=cfg.get("n_mhc_caps", 8),
         dropout=cfg.get("dropout", 0.3),
+        core_conditioning=cfg.get("core_conditioning", False),
     )
 
 

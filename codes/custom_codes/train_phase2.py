@@ -54,6 +54,26 @@ def set_seed(seed):
     torch.manual_seed(seed)
 
 
+def selection_score(cfg, vm, val_loss):
+    """Score one epoch for checkpoint selection.
+
+    ``early_stop_metric`` is a metric name, ``"val_loss"``, or a list of metric
+    names whose mean is taken. The composite exists because no single metric
+    works here: on the capsule models AUROC peaks at epoch 0-1 and decays while
+    Pearson r is still climbing at epoch 38, so either one alone selects a
+    degenerate epoch. Returns ``(score, bigger_is_better, label)``.
+    """
+    sel = cfg.get("early_stop_metric", "auprc")
+    if sel == "val_loss":
+        return val_loss, False, "val_loss"
+    names = [sel] if isinstance(sel, str) else list(sel)
+    label = "+".join(names)
+    vals = [vm.get(n) for n in names]
+    if any(v is None for v in vals):
+        return -float("inf"), True, label
+    return sum(float(v) for v in vals) / len(vals), True, label
+
+
 @torch.no_grad()
 def predict(model, dp, indices, batch_size):
     model.eval()
@@ -84,7 +104,11 @@ def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path):
     opt = torch.optim.AdamW(model.parameters(), lr=cfg["lr"],
                             weight_decay=cfg["weight_decay"])
 
-    best = {"val_loss": float("inf"), "epoch": -1, "metrics": None}
+    _sel = cfg.get("early_stop_metric", "auprc")
+    best = {"val_loss": float("inf"), "epoch": -1, "metrics": None,
+            # val_loss is minimised, every other metric is maximised
+            "score": float("inf") if _sel == "val_loss" else -float("inf"),
+            "select_on": _sel if isinstance(_sel, str) else "+".join(_sel)}
     for epoch in range(cfg["epochs"]):
         model.train()
         t0 = time.time()
@@ -123,8 +147,20 @@ def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path):
               f"train_loss {run_loss/max(n_batches,1):.4f} | val_loss {val_loss:.4f} | "
               f"AUROC {vm['auroc']} r {vm['pearson_r']} | {time.time()-t0:.1f}s")
 
-        if val_loss < best["val_loss"]:
-            best = {"val_loss": val_loss, "epoch": epoch, "metrics": vm}
+        # Checkpoint selection. Selecting on val_loss is wrong here: with
+        # pos_weight ~18.7 the weighted BCE keeps rising as calibration drifts
+        # even while ranking improves, so it picks epoch 0 and throws away
+        # ~0.08 AUROC / ~0.20 Pearson r (measured, see diag_fold0.py).
+        # Default is AUPRC -- the right summary for a 5%-positive class.
+        score, bigger_is_better, sel = selection_score(cfg, vm, val_loss)
+        if bigger_is_better:
+            better = score > best.get("score", -float("inf"))
+        else:
+            better = score < best.get("score", float("inf"))
+
+        if better:
+            best = {"score": score, "select_on": sel, "val_loss": val_loss,
+                    "epoch": epoch, "metrics": vm}
             torch.save(model.state_dict(), ckpt_path)
 
     # reload best for OOF / test
@@ -168,7 +204,8 @@ def main():
         print(f"\n=== fold {fold} | train {len(tr_idx)} val {len(va_idx)} ===")
         model, best, oof = train_one_fold(cfg, train_dp, tr_idx, va_idx, fold, paths["ckpt"])
         report = {"fold": fold, "best_epoch": best["epoch"],
-                  "best_val_loss": best["val_loss"], "val_metrics": best["metrics"]}
+                  "best_val_loss": best["val_loss"], "val_metrics": best["metrics"],
+                  "selected_on": best["select_on"], "selected_score": best["score"]}
         fold_reports.append(report)
         oof_frames.append(oof)
 

@@ -17,5 +17,9 @@
   "pos_weight": 18.5,
 
   "warm_start_core_only": false,
-  "ensemble_alpha": 0.5
+  "allow_cold_start": false,
+  "phase3_seed_offset": 10000,
+
+  "ensemble_alpha": 0.5,
+  "summary_min_pos": 2
 }

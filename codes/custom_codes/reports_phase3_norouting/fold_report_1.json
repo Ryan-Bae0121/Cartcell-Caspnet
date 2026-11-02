@@ -1,0 +1,15 @@
+{
+  "fold": 1,
+  "best_epoch": 2,
+  "best_val_loss": 1.0662800073623657,
+  "val_metrics": {
+    "n": 5126,
+    "n_pos": 237,
+    "auroc": 0.860446209651737,
+    "auprc": 0.2872803266492376,
+    "pearson_r": 0.5017959676736145,
+    "mse": 0.0531362066077661
+  },
+  "selected_on": "auprc",
+  "selected_score": 0.2872803266492376
+}

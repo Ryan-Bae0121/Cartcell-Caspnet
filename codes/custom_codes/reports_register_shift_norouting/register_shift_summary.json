@@ -1,0 +1,152 @@
+{
+  "args": {
+    "ckpt_dir": "reports_phase3_norouting/checkpoints",
+    "out_dir": "reports_register_shift_norouting",
+    "n_cases": 300,
+    "total_len": 21,
+    "max_anchor_len": 17,
+    "n_resample": 12,
+    "seed": 0,
+    "model": "phase3",
+    "config": "config/phase3_norouting.json"
+  },
+  "thresholds_affinity": {
+    "500nM": 0.4256251898085073,
+    "50nM": 0.6384377847127609
+  },
+  "pseudo_sequence_warning": "0/68 alleles use PLACEHOLDER pseudo-sequences. The allele branch carries no real signal, so no cross-allele or per-allele claim can be made from this run.",
+  "leakage_audit": {
+    "n_variants": 16468,
+    "exact_pair_in_train": 0,
+    "seq_in_train_any_allele": 3219,
+    "core9_in_train_same_allele": 1783,
+    "note": "exact_pair_in_train must be ~0 for the experiment to be clean. core9_in_train_same_allele is high BY DESIGN -- the anchors reuse real peptides, so their cores were seen in training. This experiment measures prediction stability, not generalisation to unseen cores."
+  },
+  "condition_summary": [
+    {
+      "condition": "core_mutate",
+      "n_cases": 300,
+      "median_yhat_sd": 0.061038528354938615,
+      "median_yhat_range": 0.21581573933362957,
+      "median_mean_absdev": 0.07345814406871795,
+      "median_max_absdev": 0.1717483565211296,
+      "median_prob_range": 0.084665185213089,
+      "median_flip_500nM": 0.08333333333333333,
+      "mean_flip_500nM": 0.23472222222222225,
+      "mean_same_core_rate": 0.1663888888888889,
+      "mean_core_drift": 2.453888888888889,
+      "mean_core_conf": 0.36946665925698147,
+      "same_core_moved": NaN,
+      "fixed_index_moved": NaN
+    },
+    {
+      "condition": "flank_resample",
+      "n_cases": 300,
+      "median_yhat_sd": 0.034272995710870946,
+      "median_yhat_range": 0.11444069892168048,
+      "median_mean_absdev": 0.04503696163495381,
+      "median_max_absdev": 0.10027749240398405,
+      "median_prob_range": 0.03510398864746092,
+      "median_flip_500nM": 0.0,
+      "mean_flip_500nM": 0.09833333333333333,
+      "mean_same_core_rate": 0.41027777777777774,
+      "mean_core_drift": 2.6422222222222222,
+      "mean_core_conf": 0.3437725918822819,
+      "same_core_moved": 0.41027777777777774,
+      "fixed_index_moved": 0.03805555555555555
+    },
+    {
+      "condition": "scramble_all",
+      "n_cases": 300,
+      "median_yhat_sd": 0.032728329295995756,
+      "median_yhat_range": 0.11568417251110077,
+      "median_mean_absdev": 0.037700157488385844,
+      "median_max_absdev": 0.09098926782608033,
+      "median_prob_range": 0.06434835791587828,
+      "median_flip_500nM": 0.0,
+      "mean_flip_500nM": 0.14722222222222223,
+      "mean_same_core_rate": 0.1225,
+      "mean_core_drift": 2.6555555555555554,
+      "mean_core_conf": 0.36788473578376907,
+      "same_core_moved": NaN,
+      "fixed_index_moved": NaN
+    },
+    {
+      "condition": "shift_flank",
+      "n_cases": 300,
+      "median_yhat_sd": 0.035621450787448966,
+      "median_yhat_range": 0.10326351523399355,
+      "median_mean_absdev": 0.04581923612526484,
+      "median_max_absdev": 0.09138283580541613,
+      "median_prob_range": 0.03292053937911987,
+      "median_flip_500nM": 0.0,
+      "mean_flip_500nM": 0.10668650793650793,
+      "mean_same_core_rate": 0.4194603174603175,
+      "mean_core_drift": 2.9553148148148147,
+      "mean_core_conf": 0.3462279744250946,
+      "same_core_moved": 0.4203373015873016,
+      "fixed_index_moved": 0.044559523809523806
+    },
+    {
+      "condition": "shift_pad",
+      "n_cases": 300,
+      "median_yhat_sd": 0.010195604421669223,
+      "median_yhat_range": 0.03165986388921738,
+      "median_mean_absdev": 0.014463601216222277,
+      "median_max_absdev": 0.027459947764873496,
+      "median_prob_range": 0.0053089678287506215,
+      "median_flip_500nM": 0.0,
+      "mean_flip_500nM": 0.05559181559181559,
+      "mean_same_core_rate": 0.5436394716394716,
+      "mean_core_drift": 2.0576282051282053,
+      "mean_core_conf": 0.35515840544709654,
+      "same_core_moved": 0.5070715488215488,
+      "fixed_index_moved": 0.04589057239057239
+    }
+  ],
+  "verdict": {
+    "shift_flank_range_over_flank_resample_range": 0.9023320917033526,
+    "core_mutate_dev_over_shift_flank_dev": 1.6032162532760548,
+    "scramble_all_dev_over_shift_flank_dev": 0.8228019643391192,
+    "reading": "ratio_1 near 1 => position adds no instability beyond flank identity. ratio_2 and ratio_3 >> 1 => the model is sensitive to content, so the invariance is not the degenerate kind. ratio_3 specifically rules out a composition-only (bag-of-amino-acids) model.",
+    "core_tracking": {
+      "shift_pad": {
+        "same_core_rate": 0.5070715488215488,
+        "fixed_index_rate": 0.04589057239057239,
+        "mean_core_drift": 2.0576282051282053
+      },
+      "shift_flank": {
+        "same_core_rate": 0.4203373015873016,
+        "fixed_index_rate": 0.044559523809523806,
+        "mean_core_drift": 2.9553148148148147
+      },
+      "reading": "same_core_rate is the answer to 'does it find the same 9-mer when the position changes'. fixed_index_rate is the competing explanation -- the model pointing at a fixed absolute slot regardless of where the peptide went. High same_core with low fixed_index means real tracking; the reverse means a positional habit that prediction-stability alone would have hidden."
+    },
+    "paired_tests": {
+      "shift_flank_gt_flank_resample": {
+        "n_cases": 300,
+        "median_a": 0.10326351523399355,
+        "median_b": 0.11444069892168048,
+        "statistic": 16838.0,
+        "p_value": 0.9999319444154091,
+        "alternative": "greater"
+      },
+      "core_mutate_gt_shift_flank": {
+        "n_cases": 300,
+        "median_a": 0.07345814406871795,
+        "median_b": 0.04581923612526484,
+        "statistic": 42180.0,
+        "p_value": 3.747973652769214e-39,
+        "alternative": "greater"
+      },
+      "scramble_all_gt_shift_flank": {
+        "n_cases": 300,
+        "median_a": 0.037700157488385844,
+        "median_b": 0.04581923612526484,
+        "statistic": 17339.0,
+        "p_value": 0.9997511237360359,
+        "alternative": "greater"
+      }
+    }
+  }
+}

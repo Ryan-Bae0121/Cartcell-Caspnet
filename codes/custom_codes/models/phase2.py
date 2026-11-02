@@ -28,11 +28,18 @@ class Phase2Model(nn.Module):
         pseudo_channels=(32, 64),
         mlp_hidden=128,
         dropout=0.5,
+        core_conditioning=False,
     ):
         super().__init__()
         self.pep_stem, pep_out = conv_stack(pep_in, list(pep_channels), kernel_size=3)
-        self.core = CoreRegister(pep_out, core_dim=pep_out, core_kernel=core_kernel)
         self.pseudo_encoder = PseudoSeqEncoder(pseudo_in, tuple(pseudo_channels))
+        # Built after pseudo_encoder so the core module can be told the allele
+        # embedding's width; forward() must likewise encode the allele BEFORE
+        # picking the core (see CoreRegister's docstring).
+        self.core = CoreRegister(
+            pep_out, core_dim=pep_out, core_kernel=core_kernel,
+            mhc_dim=self.pseudo_encoder.out_dim if core_conditioning else None,
+        )
 
         fused = pep_out + self.pseudo_encoder.out_dim
         self.head = nn.Sequential(
@@ -48,8 +55,8 @@ class Phase2Model(nn.Module):
 
     def forward(self, peptide, pseudo):
         pep_feat = self.pep_stem(peptide)                 # (B, C, L)
-        core_vec, pos_prob = self.core(pep_feat)          # (B, C), (B, T)
-        mhc_vec = self.pseudo_encoder(pseudo)             # (B, C2)
+        mhc_vec = self.pseudo_encoder(pseudo)             # (B, C2)  -- before the core
+        core_vec, pos_prob = self.core(pep_feat, mhc_vec)  # (B, C), (B, T)
         fused = torch.cat([core_vec, mhc_vec], dim=1)
         h = self.head(fused)
         return self.cls_out(h), self.reg_out(h), pos_prob
@@ -62,6 +69,7 @@ def build_from_config(cfg):
         pseudo_channels=tuple(cfg.get("pseudo_channels", (32, 64))),
         mlp_hidden=cfg.get("mlp_hidden", 128),
         dropout=cfg.get("dropout", 0.5),
+        core_conditioning=cfg.get("core_conditioning", False),
     )
 
 
