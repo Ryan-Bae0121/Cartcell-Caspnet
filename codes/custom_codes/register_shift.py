@@ -585,10 +585,16 @@ def main():
     summary = {
         "args": vars(args),
         "thresholds_affinity": THRESHOLDS,
+        # The caveat has to follow the count, not accompany it unconditionally:
+        # earlier runs printed "0/68 use PLACEHOLDER" next to "carries no real
+        # signal", and that pair was read as the run being placeholder-based.
         "pseudo_sequence_warning": (
             f"{pseudo.n_placeholder}/{len(pseudo)} alleles use PLACEHOLDER "
-            "pseudo-sequences. The allele branch carries no real signal, so no "
-            "cross-allele or per-allele claim can be made from this run."
+            "pseudo-sequences. The allele branch carries no real signal there, "
+            "so no cross-allele or per-allele claim can be made from this run."
+            if pseudo.n_placeholder
+            else f"0/{len(pseudo)} alleles use placeholder pseudo-sequences; "
+                 "all are real."
         ),
         "leakage_audit": leak,
         "condition_summary": agg.to_dict(orient="records"),

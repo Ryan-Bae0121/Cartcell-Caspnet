@@ -46,10 +46,14 @@ affinity = 1 - log(IC50) / log(50000)
 | **Phase2 (CNN)** | CNN + CoreRegister. T=17개 후보 위치에 softmax(`pos_prob`) → 가중합 `core_vec`. `core_conditioning`으로 allele 정보를 core 선택에 주입 |
 | **Phase3 (CapsNet)** | multi-branch primary capsule 56개(full 32 + core 16 + MHC 8) + dynamic routing → 3 output capsule. Phase2에서 core/MHC 가중치 35개 텐서를 warm-start |
 
-**중요한 전제:** allele branch는 현재 신호를 담고 있지 않습니다. pseudo-sequence CSV가
-**85/85 placeholder**라서, 이 저장소의 어떤 결과로도 **cross-allele / per-allele 주장은 할 수 없습니다.**
-(`reports_register_shift_*/register_shift_summary.json`의 `pseudo_sequence_warning` 참조)
-실제 34-mer 표는 DeepMHCII vendored 버전에서 가져올 수 있다고 확인됐지만 **아직 적용 전**입니다.
+**pseudo-sequence는 실서열입니다.** `custom_dataset/Anthem_dataset/mhc_ii_pseudo.csv`
+68행 전부 `source=real` (34-mer). 과거의 placeholder 더미 단계는 지나갔습니다.
+
+> `register_shift_summary.json`의 `pseudo_sequence_warning`이 한동안
+> `"0/68 alleles use PLACEHOLDER ... carries no real signal"`로 출력되어
+> **placeholder로 돌린 run처럼 읽혔습니다.** 경고 문장이 카운트와 무관하게
+> 무조건 붙던 버그이고, 지금은 카운트가 0이면 문장도 달라지게 고쳤습니다.
+> **숫자 0/68이 맞는 값이고, 이 run들은 실서열 기반입니다.**
 
 ---
 
@@ -328,7 +332,8 @@ fold 0:
 `W` 초기화 스케일을 키우는 실험이 그 답이고, 성공하면 negative result가 **contribution**이 됩니다.
 
 ### 정직하게 적어야 할 한계
-1. **allele branch에 신호가 없습니다** (pseudo-sequence 85/85 placeholder). per-allele 주장 불가.
+1. 이 실험들은 **peptide branch 진단**입니다. pseudo-sequence는 실서열이지만,
+   register-shift는 allele을 고정하고 peptide만 교란하므로 **cross-allele 주장의 근거는 아닙니다.**
 2. **epoch 예산이 부족합니다** (§5.5). 세 모델 동일하게 부족하므로 비교는 유효.
 3. `scramble_all`은 조성을 보존하지만 **길이/위치 분포까지 완전히 통제하지는 않습니다.**
    "거친 특징 의존" 가설을 확정하려면 조성 보존 대조군을 하나 더 설계해야 합니다.
@@ -395,12 +400,10 @@ epoch당 26–120s(경합에 따라 변동), 3개 모델 × 5 fold × 50 epoch =
 - [ ] **`W` 초기화 스케일 수정 후 재학습.** `W ~ 0.01·randn`이 agreement를 죽입니다(§6.2).
       스케일을 키웠을 때 input-dependence가 올라가고 routing이 실제로 기여하는지 측정.
       이게 성공하면 negative result가 positive contribution이 됩니다.
-- [ ] **pseudo-sequence 실데이터 적용** (DeepMHCII vendored 34-mer 표).
-      현재 85/85 placeholder라 allele 관련 주장이 전부 막혀 있습니다. DTU 직접 다운로드는 차단됨.
 
 **중간**
 - [ ] 조성 보존 대조군 추가 — Phase3의 "거친 특징 의존" 가설 확정용
-- [ ] per-allele register 측정 (위 pseudo-sequence 작업 이후에만 의미 있음)
+- [ ] per-allele register 측정 — pseudo-sequence가 실서열이므로 이제 가능
 - [ ] register-shift 그림에 core-tracking 패널 추가
 - [ ] epoch 예산 확대 (현재 50에서도 best_epoch가 붙어 있음)
 
