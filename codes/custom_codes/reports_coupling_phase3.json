@@ -1,0 +1,93 @@
+{
+  "args": {
+    "ckpt_dir": "reports_phase3_final/checkpoints",
+    "config": "config/phase3.json",
+    "n_peptides": 1500,
+    "batch_size": 256,
+    "out": "reports_coupling_phase3.json",
+    "label": "phase3_routing3"
+  },
+  "routing_iters": 3,
+  "folds": [
+    {
+      "label": "phase3_routing3/phase3_fold0.pt",
+      "n_peptides": 1500,
+      "n_primary": 56,
+      "mean_abs_dev_from_uniform": 0.1255747526884079,
+      "max_abs_dev_from_uniform": 0.47096899151802063,
+      "p99_abs_dev": 0.4342256486415863,
+      "mean_c": 0.3333333134651184,
+      "min_c": 0.06524062901735306,
+      "max_c": 0.8043023347854614,
+      "mean_across_input_std": 0.05582159012556076,
+      "max_across_input_std": 0.15357132256031036,
+      "std_of_cell_means": 0.1497325301170349,
+      "mean_entropy": 0.9819040298461914,
+      "uniform_entropy": 1.0986122886681098
+    },
+    {
+      "label": "phase3_routing3/phase3_fold1.pt",
+      "n_peptides": 1500,
+      "n_primary": 56,
+      "mean_abs_dev_from_uniform": 0.06328612565994263,
+      "max_abs_dev_from_uniform": 0.23900625109672546,
+      "p99_abs_dev": 0.2066318690776825,
+      "mean_c": 0.3333333432674408,
+      "min_c": 0.18846234679222107,
+      "max_c": 0.5723395943641663,
+      "mean_across_input_std": 0.026548316702246666,
+      "max_across_input_std": 0.07859151065349579,
+      "std_of_cell_means": 0.07241540402173996,
+      "mean_entropy": 1.0717734098434448,
+      "uniform_entropy": 1.0986122886681098
+    },
+    {
+      "label": "phase3_routing3/phase3_fold2.pt",
+      "n_peptides": 1500,
+      "n_primary": 56,
+      "mean_abs_dev_from_uniform": 0.11167162656784058,
+      "max_abs_dev_from_uniform": 0.4165296256542206,
+      "p99_abs_dev": 0.36302581429481506,
+      "mean_c": 0.3333333432674408,
+      "min_c": 0.06450915336608887,
+      "max_c": 0.7498629689216614,
+      "mean_across_input_std": 0.04255387559533119,
+      "max_across_input_std": 0.12236073613166809,
+      "std_of_cell_means": 0.1386907696723938,
+      "mean_entropy": 1.0050369501113892,
+      "uniform_entropy": 1.0986122886681098
+    },
+    {
+      "label": "phase3_routing3/phase3_fold3.pt",
+      "n_peptides": 1500,
+      "n_primary": 56,
+      "mean_abs_dev_from_uniform": 0.13349884748458862,
+      "max_abs_dev_from_uniform": 0.49746420979499817,
+      "p99_abs_dev": 0.46521928906440735,
+      "mean_c": 0.3333333432674408,
+      "min_c": 0.05971889570355415,
+      "max_c": 0.830797553062439,
+      "mean_across_input_std": 0.04887278750538826,
+      "max_across_input_std": 0.13776689767837524,
+      "std_of_cell_means": 0.15926474332809448,
+      "mean_entropy": 0.973237156867981,
+      "uniform_entropy": 1.0986122886681098
+    },
+    {
+      "label": "phase3_routing3/phase3_fold4.pt",
+      "n_peptides": 1500,
+      "n_primary": 56,
+      "mean_abs_dev_from_uniform": 0.10145764797925949,
+      "max_abs_dev_from_uniform": 0.3959031403064728,
+      "p99_abs_dev": 0.36394381523132324,
+      "mean_c": 0.3333333134651184,
+      "min_c": 0.09074417501688004,
+      "max_c": 0.7292364835739136,
+      "mean_across_input_std": 0.03888750448822975,
+      "max_across_input_std": 0.11948927491903305,
+      "std_of_cell_means": 0.12199588865041733,
+      "mean_entropy": 1.0231890678405762,
+      "uniform_entropy": 1.0986122886681098
+    }
+  ]
+}

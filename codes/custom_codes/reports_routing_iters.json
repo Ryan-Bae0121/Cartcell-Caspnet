@@ -1,0 +1,408 @@
+{
+  "args": {
+    "ckpt_dir": "reports_phase3_final/checkpoints",
+    "config": "config/phase3.json",
+    "n_peptides": 800,
+    "batch_size": 256,
+    "max_iters": 10,
+    "out": "reports_routing_iters.json"
+  },
+  "trained_routing_iters": 3,
+  "folds": [
+    {
+      "u_hat_norm_mean": 0.3485206961631775,
+      "u_norm_mean": 0.8821608424186707,
+      "W_abs_mean": 0.03617117926478386,
+      "v_norm_mean": 0.6406337022781372,
+      "steps": [
+        {
+          "iter": 1,
+          "mean_abs_dev_from_uniform": 0.0,
+          "input_dependence": 0.7136868238449097,
+          "mean_abs_b": 0.0,
+          "mean_abs_agreement_increment": 0.17875425517559052
+        },
+        {
+          "iter": 2,
+          "mean_abs_dev_from_uniform": 0.0631718561053276,
+          "input_dependence": 0.1905222088098526,
+          "mean_abs_b": 0.17875425517559052,
+          "mean_abs_agreement_increment": 0.1818496137857437
+        },
+        {
+          "iter": 3,
+          "mean_abs_dev_from_uniform": 0.1254991739988327,
+          "input_dependence": 0.19115827977657318,
+          "mean_abs_b": 0.3605883717536926,
+          "mean_abs_agreement_increment": 0.18328674137592316
+        },
+        {
+          "iter": 4,
+          "mean_abs_dev_from_uniform": 0.1766982078552246,
+          "input_dependence": 0.19554322957992554,
+          "mean_abs_b": 0.543829083442688,
+          "mean_abs_agreement_increment": 0.18362610042095184
+        },
+        {
+          "iter": 5,
+          "mean_abs_dev_from_uniform": 0.2148871123790741,
+          "input_dependence": 0.20051231980323792,
+          "mean_abs_b": 0.7271314263343811,
+          "mean_abs_agreement_increment": 0.18320590257644653
+        },
+        {
+          "iter": 6,
+          "mean_abs_dev_from_uniform": 0.2429124414920807,
+          "input_dependence": 0.20465557277202606,
+          "mean_abs_b": 0.9098562598228455,
+          "mean_abs_agreement_increment": 0.18357543647289276
+        },
+        {
+          "iter": 7,
+          "mean_abs_dev_from_uniform": 0.2639487683773041,
+          "input_dependence": 0.20788706839084625,
+          "mean_abs_b": 1.0927952527999878,
+          "mean_abs_agreement_increment": 0.18502403795719147
+        },
+        {
+          "iter": 8,
+          "mean_abs_dev_from_uniform": 0.280263215303421,
+          "input_dependence": 0.21053704619407654,
+          "mean_abs_b": 1.276945948600769,
+          "mean_abs_agreement_increment": 0.1868743896484375
+        },
+        {
+          "iter": 9,
+          "mean_abs_dev_from_uniform": 0.29328617453575134,
+          "input_dependence": 0.2128855288028717,
+          "mean_abs_b": 1.4626785516738892,
+          "mean_abs_agreement_increment": 0.18859539926052094
+        },
+        {
+          "iter": 10,
+          "mean_abs_dev_from_uniform": 0.3039271831512451,
+          "input_dependence": 0.21513523161411285,
+          "mean_abs_b": 1.649786114692688,
+          "mean_abs_agreement_increment": 0.19004490971565247
+        }
+      ],
+      "ckpt": "phase3_fold0.pt"
+    },
+    {
+      "u_hat_norm_mean": 0.171468585729599,
+      "u_norm_mean": 0.8802778124809265,
+      "W_abs_mean": 0.019525768235325813,
+      "v_norm_mean": 0.5807167291641235,
+      "steps": [
+        {
+          "iter": 1,
+          "mean_abs_dev_from_uniform": 0.0,
+          "input_dependence": 0.7136868238449097,
+          "mean_abs_b": 0.0,
+          "mean_abs_agreement_increment": 0.07912150770425797
+        },
+        {
+          "iter": 2,
+          "mean_abs_dev_from_uniform": 0.030517535284161568,
+          "input_dependence": 0.17819851636886597,
+          "mean_abs_b": 0.07912150025367737,
+          "mean_abs_agreement_increment": 0.07979360967874527
+        },
+        {
+          "iter": 3,
+          "mean_abs_dev_from_uniform": 0.06303732097148895,
+          "input_dependence": 0.17584191262722015,
+          "mean_abs_b": 0.1588779240846634,
+          "mean_abs_agreement_increment": 0.08242174237966537
+        },
+        {
+          "iter": 4,
+          "mean_abs_dev_from_uniform": 0.09597260504961014,
+          "input_dependence": 0.17509227991104126,
+          "mean_abs_b": 0.24040529131889343,
+          "mean_abs_agreement_increment": 0.08805139362812042
+        },
+        {
+          "iter": 5,
+          "mean_abs_dev_from_uniform": 0.12766075134277344,
+          "input_dependence": 0.17544656991958618,
+          "mean_abs_b": 0.3260098695755005,
+          "mean_abs_agreement_increment": 0.09553266316652298
+        },
+        {
+          "iter": 6,
+          "mean_abs_dev_from_uniform": 0.15663281083106995,
+          "input_dependence": 0.17636632919311523,
+          "mean_abs_b": 0.420304536819458,
+          "mean_abs_agreement_increment": 0.10272113978862762
+        },
+        {
+          "iter": 7,
+          "mean_abs_dev_from_uniform": 0.18196412920951843,
+          "input_dependence": 0.1774129569530487,
+          "mean_abs_b": 0.5229138135910034,
+          "mean_abs_agreement_increment": 0.1079748123884201
+        },
+        {
+          "iter": 8,
+          "mean_abs_dev_from_uniform": 0.20354853570461273,
+          "input_dependence": 0.17832061648368835,
+          "mean_abs_b": 0.6308802962303162,
+          "mean_abs_agreement_increment": 0.11095288395881653
+        },
+        {
+          "iter": 9,
+          "mean_abs_dev_from_uniform": 0.22192253172397614,
+          "input_dependence": 0.17894485592842102,
+          "mean_abs_b": 0.7418331503868103,
+          "mean_abs_agreement_increment": 0.11209899932146072
+        },
+        {
+          "iter": 10,
+          "mean_abs_dev_from_uniform": 0.23784254491329193,
+          "input_dependence": 0.1792365461587906,
+          "mean_abs_b": 0.8539320826530457,
+          "mean_abs_agreement_increment": 0.1119823232293129
+        }
+      ],
+      "ckpt": "phase3_fold1.pt"
+    },
+    {
+      "u_hat_norm_mean": 0.295775830745697,
+      "u_norm_mean": 0.8700922727584839,
+      "W_abs_mean": 0.032155804336071014,
+      "v_norm_mean": 0.4711485207080841,
+      "steps": [
+        {
+          "iter": 1,
+          "mean_abs_dev_from_uniform": 0.0,
+          "input_dependence": 0.7136868238449097,
+          "mean_abs_b": 0.0,
+          "mean_abs_agreement_increment": 0.14551931619644165
+        },
+        {
+          "iter": 2,
+          "mean_abs_dev_from_uniform": 0.05500471964478493,
+          "input_dependence": 0.1274152547121048,
+          "mean_abs_b": 0.14551931619644165,
+          "mean_abs_agreement_increment": 0.14679351449012756
+        },
+        {
+          "iter": 3,
+          "mean_abs_dev_from_uniform": 0.11155463755130768,
+          "input_dependence": 0.12459477037191391,
+          "mean_abs_b": 0.29230910539627075,
+          "mean_abs_agreement_increment": 0.14635315537452698
+        },
+        {
+          "iter": 4,
+          "mean_abs_dev_from_uniform": 0.1611521691083908,
+          "input_dependence": 0.12470811605453491,
+          "mean_abs_b": 0.43861711025238037,
+          "mean_abs_agreement_increment": 0.1449643075466156
+        },
+        {
+          "iter": 5,
+          "mean_abs_dev_from_uniform": 0.20016507804393768,
+          "input_dependence": 0.12640099227428436,
+          "mean_abs_b": 0.5833889245986938,
+          "mean_abs_agreement_increment": 0.14301329851150513
+        },
+        {
+          "iter": 6,
+          "mean_abs_dev_from_uniform": 0.22938843071460724,
+          "input_dependence": 0.12854216992855072,
+          "mean_abs_b": 0.7259206771850586,
+          "mean_abs_agreement_increment": 0.14219996333122253
+        },
+        {
+          "iter": 7,
+          "mean_abs_dev_from_uniform": 0.251171350479126,
+          "input_dependence": 0.13063068687915802,
+          "mean_abs_b": 0.8670883178710938,
+          "mean_abs_agreement_increment": 0.14365935325622559
+        },
+        {
+          "iter": 8,
+          "mean_abs_dev_from_uniform": 0.2677121162414551,
+          "input_dependence": 0.1326153576374054,
+          "mean_abs_b": 1.009009838104248,
+          "mean_abs_agreement_increment": 0.14712189137935638
+        },
+        {
+          "iter": 9,
+          "mean_abs_dev_from_uniform": 0.2806287705898285,
+          "input_dependence": 0.13461124897003174,
+          "mean_abs_b": 1.1536656618118286,
+          "mean_abs_agreement_increment": 0.15165099501609802
+        },
+        {
+          "iter": 10,
+          "mean_abs_dev_from_uniform": 0.2910034656524658,
+          "input_dependence": 0.13672570884227753,
+          "mean_abs_b": 1.3021838665008545,
+          "mean_abs_agreement_increment": 0.15644356608390808
+        }
+      ],
+      "ckpt": "phase3_fold2.pt"
+    },
+    {
+      "u_hat_norm_mean": 0.37301531434059143,
+      "u_norm_mean": 0.8916041851043701,
+      "W_abs_mean": 0.03741147369146347,
+      "v_norm_mean": 0.6850791573524475,
+      "steps": [
+        {
+          "iter": 1,
+          "mean_abs_dev_from_uniform": 0.0,
+          "input_dependence": 0.7136868238449097,
+          "mean_abs_b": 0.0,
+          "mean_abs_agreement_increment": 0.21479031443595886
+        },
+        {
+          "iter": 2,
+          "mean_abs_dev_from_uniform": 0.06830082833766937,
+          "input_dependence": 0.11942490935325623,
+          "mean_abs_b": 0.21479032933712006,
+          "mean_abs_agreement_increment": 0.2181641310453415
+        },
+        {
+          "iter": 3,
+          "mean_abs_dev_from_uniform": 0.13358664512634277,
+          "input_dependence": 0.12125144898891449,
+          "mean_abs_b": 0.4329199194908142,
+          "mean_abs_agreement_increment": 0.22169442474842072
+        },
+        {
+          "iter": 4,
+          "mean_abs_dev_from_uniform": 0.18580804765224457,
+          "input_dependence": 0.12559083104133606,
+          "mean_abs_b": 0.6545684337615967,
+          "mean_abs_agreement_increment": 0.22347265481948853
+        },
+        {
+          "iter": 5,
+          "mean_abs_dev_from_uniform": 0.22462040185928345,
+          "input_dependence": 0.1290634572505951,
+          "mean_abs_b": 0.8780065774917603,
+          "mean_abs_agreement_increment": 0.22309428453445435
+        },
+        {
+          "iter": 6,
+          "mean_abs_dev_from_uniform": 0.25355181097984314,
+          "input_dependence": 0.13046494126319885,
+          "mean_abs_b": 1.1010267734527588,
+          "mean_abs_agreement_increment": 0.22294455766677856
+        },
+        {
+          "iter": 7,
+          "mean_abs_dev_from_uniform": 0.2757064402103424,
+          "input_dependence": 0.1301233023405075,
+          "mean_abs_b": 1.322975993156433,
+          "mean_abs_agreement_increment": 0.2239304482936859
+        },
+        {
+          "iter": 8,
+          "mean_abs_dev_from_uniform": 0.2931259274482727,
+          "input_dependence": 0.1287369281053543,
+          "mean_abs_b": 1.5449873208999634,
+          "mean_abs_agreement_increment": 0.2256270945072174
+        },
+        {
+          "iter": 9,
+          "mean_abs_dev_from_uniform": 0.3071669340133667,
+          "input_dependence": 0.12687349319458008,
+          "mean_abs_b": 1.7687859535217285,
+          "mean_abs_agreement_increment": 0.2274675965309143
+        },
+        {
+          "iter": 10,
+          "mean_abs_dev_from_uniform": 0.3187398910522461,
+          "input_dependence": 0.12489080429077148,
+          "mean_abs_b": 1.9944958686828613,
+          "mean_abs_agreement_increment": 0.2291189432144165
+        }
+      ],
+      "ckpt": "phase3_fold3.pt"
+    },
+    {
+      "u_hat_norm_mean": 0.31930312514305115,
+      "u_norm_mean": 0.8700186014175415,
+      "W_abs_mean": 0.03357512503862381,
+      "v_norm_mean": 0.6731216907501221,
+      "steps": [
+        {
+          "iter": 1,
+          "mean_abs_dev_from_uniform": 0.0,
+          "input_dependence": 0.7136868238449097,
+          "mean_abs_b": 0.0,
+          "mean_abs_agreement_increment": 0.17688171565532684
+        },
+        {
+          "iter": 2,
+          "mean_abs_dev_from_uniform": 0.051503755152225494,
+          "input_dependence": 0.13140004873275757,
+          "mean_abs_b": 0.17688170075416565,
+          "mean_abs_agreement_increment": 0.18006867170333862
+        },
+        {
+          "iter": 3,
+          "mean_abs_dev_from_uniform": 0.10123804956674576,
+          "input_dependence": 0.12937253713607788,
+          "mean_abs_b": 0.3568618595600128,
+          "mean_abs_agreement_increment": 0.18228590488433838
+        },
+        {
+          "iter": 4,
+          "mean_abs_dev_from_uniform": 0.14365456998348236,
+          "input_dependence": 0.13017956912517548,
+          "mean_abs_b": 0.5388960838317871,
+          "mean_abs_agreement_increment": 0.18476112186908722
+        },
+        {
+          "iter": 5,
+          "mean_abs_dev_from_uniform": 0.17685700953006744,
+          "input_dependence": 0.13236241042613983,
+          "mean_abs_b": 0.7229670286178589,
+          "mean_abs_agreement_increment": 0.18629126250743866
+        },
+        {
+          "iter": 6,
+          "mean_abs_dev_from_uniform": 0.20191147923469543,
+          "input_dependence": 0.13466618955135345,
+          "mean_abs_b": 0.9085735082626343,
+          "mean_abs_agreement_increment": 0.18647906184196472
+        },
+        {
+          "iter": 7,
+          "mean_abs_dev_from_uniform": 0.2210310399532318,
+          "input_dependence": 0.13639125227928162,
+          "mean_abs_b": 1.0947296619415283,
+          "mean_abs_agreement_increment": 0.18632544577121735
+        },
+        {
+          "iter": 8,
+          "mean_abs_dev_from_uniform": 0.23611284792423248,
+          "input_dependence": 0.1373857706785202,
+          "mean_abs_b": 1.2808184623718262,
+          "mean_abs_agreement_increment": 0.18668335676193237
+        },
+        {
+          "iter": 9,
+          "mean_abs_dev_from_uniform": 0.24853134155273438,
+          "input_dependence": 0.13779249787330627,
+          "mean_abs_b": 1.4670697450637817,
+          "mean_abs_agreement_increment": 0.18773393332958221
+        },
+        {
+          "iter": 10,
+          "mean_abs_dev_from_uniform": 0.25914478302001953,
+          "input_dependence": 0.1378248780965805,
+          "mean_abs_b": 1.6541712284088135,
+          "mean_abs_agreement_increment": 0.1893012672662735
+        }
+      ],
+      "ckpt": "phase3_fold4.pt"
+    }
+  ]
+}
