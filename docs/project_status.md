@@ -385,11 +385,13 @@ epoch당 26–120s(경합에 따라 변동), 3개 모델 × 5 fold × 50 epoch =
 > **학습을 밤새 돌릴 때 반드시 확인:** Windows **Modern Standby(S0)** 가 학습을 멈춥니다.
 > 증상이 교묘합니다 — 프로세스가 죽지 않고 그냥 느려집니다
 > (11시간 20분에 2 epoch → 176일 완주 예상). Kernel-Power event 506/507로 확인 가능.
+>
 > ```
 > powercfg /change standby-timeout-ac 0
 > powercfg /change hibernate-timeout-ac 0
 > powercfg /change monitor-timeout-ac 0
 > ```
+>
 > Win+L 잠금과 화면 끄기는 **안전**합니다. 위 설정은 작업이 끝나면 되돌리세요.
 
 ---
