@@ -74,6 +74,12 @@ SUBSTITUTIONS = {
 }
 
 
+# A fenced block inside a blockquote is not processed by the fenced_code
+# extension -- the "> " prefix keeps it out -- so it arrives as an inline
+# <code> that happens to contain newlines, and renders as one run-on line.
+# Promote those back to real code blocks.
+BLOCKQUOTE_FENCE = re.compile(r"<p[^>]*><code>([^<]*\n[^<]*)</code></p>", re.S)
+
 LIST_ITEM = re.compile(r"^\s*(?:[-*+] |\d+\. )")
 
 
@@ -123,6 +129,7 @@ def main():
     html = markdown.markdown(
         text, extensions=["tables", "fenced_code", "sane_lists"])
     # fpdf2 draws table rules only when the markup asks for them.
+    html = BLOCKQUOTE_FENCE.sub(r"<pre><code>\1</code></pre>", html)
     html = html.replace("<table>", '<table border="1" width="100%">')
     html = unwrap_code_in_cells(html)
     # fpdf2 defaults to single-spaced lines, which is too tight for Hangul.
