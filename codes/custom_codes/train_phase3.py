@@ -29,6 +29,7 @@ import pandas as pd
 import torch
 from sklearn.model_selection import KFold
 
+import epoch_trace
 from data_provider import DataProvider
 from evaluate import evaluate, pooled_metrics
 from losses import Phase3Loss
@@ -117,7 +118,7 @@ def _warm_start(model, cfg, fold):
     return f"warm-start [{mode}, {len(loaded)} tensors] <- {p2_path}"
 
 
-def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path):
+def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path, trace=None):
     set_seed(cfg["seed"] + fold)
     model = build_from_config(cfg).to(DEVICE)
     print(f"  fold {fold} init: {_warm_start(model, cfg, fold)}")
@@ -165,9 +166,13 @@ def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path):
                 vb += 1
             val_loss = (vt / max(vb, 1)).item()
 
+        w_abs = epoch_trace.routing_w_abs_mean(model)
         print(f"  fold {fold} epoch {epoch:02d} | "
               f"train_loss {run_loss/max(n_batches,1):.4f} | val_loss {val_loss:.4f} | "
-              f"AUROC {vm['auroc']} r {vm['pearson_r']} | {time.time()-t0:.1f}s")
+              f"AUROC {vm['auroc']} r {vm['pearson_r']} | "
+              + (f"|W| {w_abs:.5f} ({w_abs/epoch_trace.INIT_W_ABS_MEAN:.2f}x init) | "
+                 if w_abs is not None else "")
+              + f"{time.time()-t0:.1f}s")
 
         # Same selection fix as train_phase2.py -- and it must stay identical
         # here, because Phase2-vs-Phase3 is the comparison the project reports.
@@ -184,6 +189,13 @@ def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path):
             best = {"score": score, "select_on": sel, "val_loss": val_loss,
                     "epoch": epoch, "metrics": vm}
             torch.save(model.state_dict(), ckpt_path)
+
+        epoch_trace.append(trace, {
+            "fold": fold, "epoch": epoch,
+            "train_loss": run_loss / max(n_batches, 1), "val_loss": val_loss,
+            "score": score, "select_on": sel, "is_best": bool(better),
+            "w_abs_mean": w_abs, "metrics": vm, "secs": round(time.time() - t0, 1),
+        })
 
     # reload best for OOF / test
     model.load_state_dict(torch.load(ckpt_path, map_location=DEVICE))
@@ -214,7 +226,11 @@ def main():
     test_prob_acc = np.zeros(len(test_dp))
     test_yhat_acc = np.zeros(len(test_dp))
 
+    wanted = epoch_trace.only_folds()
+
     for fold, (tr_idx, va_idx) in enumerate(kf.split(all_idx)):
+        if wanted is not None and fold not in wanted:
+            continue
         paths = fold_paths(out_dir, ckpt_dir, "phase3", fold)
         if fold_is_done(paths):
             print(f"\n=== fold {fold} already complete -- reusing saved result "
@@ -227,7 +243,9 @@ def main():
             continue
 
         print(f"\n=== fold {fold} | train {len(tr_idx)} val {len(va_idx)} ===")
-        model, best, oof = train_one_fold(cfg, train_dp, tr_idx, va_idx, fold, paths["ckpt"])
+        model, best, oof = train_one_fold(
+            cfg, train_dp, tr_idx, va_idx, fold, paths["ckpt"],
+            trace=epoch_trace.trace_path(out_dir, "phase3", fold))
         report = {"fold": fold, "best_epoch": best["epoch"],
                   "best_val_loss": best["val_loss"], "val_metrics": best["metrics"],
                   "selected_on": best["select_on"], "selected_score": best["score"]}
@@ -240,6 +258,14 @@ def main():
         test_prob_acc += test_prob
         test_yhat_acc += test_yhat
         save_fold_result(paths, report, oof, test_prob, test_yhat)
+
+    # A partial run has no pooled OOF to speak of: the folds that did not run
+    # contributed no rows, and averaging the test predictions over n_folds would
+    # silently scale them down. The probe wants the per-epoch trace, not a summary.
+    if wanted is not None:
+        print(f"\nONLY_FOLDS={sorted(wanted)} -- per-fold results and traces written, "
+              f"skipping the pooled summary.")
+        return
 
     # pooled OOF metrics
     oof_df = pd.concat(oof_frames, ignore_index=True)

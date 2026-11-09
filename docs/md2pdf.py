@@ -71,6 +71,7 @@ class Doc(FPDF):
 SUBSTITUTIONS = {
     "−": "-",     # MINUS SIGN
     "‖": "||",    # DOUBLE VERTICAL LINE (vector norm)
+    "≈": "~",     # ALMOST EQUAL TO
 }
 
 

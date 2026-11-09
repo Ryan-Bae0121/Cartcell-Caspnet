@@ -27,3 +27,8 @@ per_case_summary.tsv
 Thumbs.db
 desktop.ini
 .DS_Store
+
+# Convergence-probe output. The traces are committed deliberately once a probe
+# finishes; the checkpoints and the tee'd stdout are not worth versioning.
+codes/custom_codes/probe_logs/
+codes/custom_codes/reports_probe_*/checkpoints/
