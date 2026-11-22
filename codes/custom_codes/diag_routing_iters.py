@@ -69,13 +69,14 @@ def replay(model, dp, idx, batch_size, n_iters):
     u_hat = torch.einsum("ijoc,bic->bijo", W, u)       # (N, n_in, n_out, out)
 
     steps = []
-    b = torch.zeros(u.size(0), model.routing.n_in, model.routing.n_out)
+    b = torch.zeros(u.size(0), model.routing.n_in, model.routing.n_out,
+                    device=u_hat.device)
     for it in range(n_iters):
         c = torch.softmax(b, dim=2)
         s = torch.einsum("bij,bijo->bjo", c, u_hat)
         v = squash(s, dim=-1)
         agree = torch.einsum("bijo,bjo->bij", u_hat, v)
-        cn = c.numpy()
+        cn = c.detach().cpu().numpy()
         steps.append({
             "iter": it + 1,
             "mean_abs_dev_from_uniform": float(np.abs(cn - 1.0 / cn.shape[2]).mean()),

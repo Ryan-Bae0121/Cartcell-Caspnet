@@ -1,0 +1,29 @@
+{
+  "run_dir": "C:\\Users\\rsrehab\\Desktop\\\uacf5\ubd80\\Cartcell-Caspnet\\codes\\custom_codes\\reports_register_shift_phase2_gpu600",
+  "T_output_slots": 17,
+  "baseline_definitions": {
+    "A_uniform_over_output_slots": "uniform over the model's real output space (core_idx_tensor, 17 slots); the model is not constrained to point inside the peptide, so this is chance for what it actually emits",
+    "B_uniform_over_anchor_windows": "uniform over the anchor's own 9-mer windows; chance GIVEN that the peptide's location is already known -- it credits locating the peptide and asks only about register"
+  },
+  "note": "Enumerated per case, not 1/n: same_core compares the 9-mer STRING, so a repeated 9-mer inside one peptide counts as a match at two indices.",
+  "conditions": {
+    "shift_flank": {
+      "chance_A_output_space": 0.05490196078431372,
+      "chance_B_position_known": 0.1331944444444444,
+      "measured_same_core_rate": 0.41746641074856045,
+      "measured_over_chance_A": 7.6038524814916375,
+      "measured_over_chance_B": 3.134262937841122,
+      "n_variant_rows": 2084,
+      "n_cases": 300
+    },
+    "shift_pad": {
+      "chance_A_output_space": 0.05490196078431372,
+      "chance_B_position_known": 0.1331944444444444,
+      "measured_same_core_rate": 0.5599878197320342,
+      "measured_over_chance_A": 10.199778145119195,
+      "measured_over_chance_B": 4.2042881147764835,
+      "n_variant_rows": 3284,
+      "n_cases": 300
+    }
+  }
+}

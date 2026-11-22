@@ -77,6 +77,24 @@ def selection_score(cfg, vm, val_loss):
     return sum(float(v) for v in vals) / len(vals), True, label
 
 
+def secondary_scores(vm):
+    """Pre-registered secondary selection rules (docs/project_status.md 5.9).
+
+    The headline regression gap changes sign depending on which rule picks the
+    checkpoint (AUPRC-selected +0.037 vs composite-selected -0.032 on the fold-0
+    400-epoch probe), so the run saves a checkpoint per rule and all three get
+    evaluated on test. These are extra files beside the primary checkpoint; the
+    fold report, the pooled summary and the resume logic are untouched.
+    """
+    a, r = vm.get("auroc"), vm.get("pearson_r")
+    out = []
+    if a is not None and r is not None:
+        out.append(("composite", (float(a) + float(r)) / 2.0))
+    if r is not None:
+        out.append(("rmax", float(r)))
+    return out
+
+
 @torch.no_grad()
 def predict(model, dp, indices, batch_size):
     model.eval()
@@ -112,6 +130,7 @@ def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path, trace=None):
             # val_loss is minimised, every other metric is maximised
             "score": float("inf") if _sel == "val_loss" else -float("inf"),
             "select_on": _sel if isinstance(_sel, str) else "+".join(_sel)}
+    alt = {}  # rule -> {"score", "epoch"}; checkpoint goes to ckpt_path.<rule>
     for epoch in range(cfg["epochs"]):
         model.train()
         t0 = time.time()
@@ -137,7 +156,7 @@ def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path, trace=None):
         vm = pooled_metrics(vdf)
         # val loss (same weighting, no grad)
         with torch.no_grad():
-            vt = torch.tensor(0.0)
+            vt = torch.zeros((), device=DEVICE)
             vb = 0
             for b in dp.iter_batches(va_idx, batch_size=cfg["batch_size"]):
                 cl, ry, pp = model(b["peptide"].to(DEVICE), b["pseudo"].to(DEVICE))
@@ -166,6 +185,11 @@ def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path, trace=None):
                     "epoch": epoch, "metrics": vm}
             torch.save(model.state_dict(), ckpt_path)
 
+        for rule, sc in secondary_scores(vm):
+            if sc > alt.get(rule, {}).get("score", -float("inf")):
+                alt[rule] = {"score": sc, "epoch": epoch}
+                torch.save(model.state_dict(), f"{ckpt_path}.{rule}")
+
         epoch_trace.append(trace, {
             "fold": fold, "epoch": epoch,
             "train_loss": run_loss / max(n_batches, 1), "val_loss": val_loss,
@@ -174,6 +198,7 @@ def train_one_fold(cfg, dp, tr_idx, va_idx, fold, ckpt_path, trace=None):
             "metrics": vm, "secs": round(time.time() - t0, 1),
         })
 
+    best["alt_selection"] = alt
     # reload best for OOF / test
     model.load_state_dict(torch.load(ckpt_path, map_location=DEVICE))
     oi, op, oy = predict(model, dp, va_idx, cfg["batch_size"])
@@ -222,7 +247,8 @@ def main():
             trace=epoch_trace.trace_path(out_dir, "phase2", fold))
         report = {"fold": fold, "best_epoch": best["epoch"],
                   "best_val_loss": best["val_loss"], "val_metrics": best["metrics"],
-                  "selected_on": best["select_on"], "selected_score": best["score"]}
+                  "selected_on": best["select_on"], "selected_score": best["score"],
+                  "alt_selection": best.get("alt_selection", {})}
         fold_reports.append(report)
         oof_frames.append(oof)
 

@@ -206,6 +206,54 @@ def main():
     for mode in modes:
         build(mode, d, os.path.join(run_dir, f"core_calibration_{mode}.png"))
 
+    # The chance levels used to live only inside the PNG, and that caused a real
+    # error: section 4.1 quoted 0.416 -- the flank_resample CONTROL value -- as a
+    # "random null" for two months, because the actual baselines were not in any
+    # file you could grep. They are written out here as well now.
+    out = {
+        "run_dir": os.path.abspath(run_dir),
+        "T_output_slots": T,
+        "baseline_definitions": {
+            "A_uniform_over_output_slots":
+                "uniform over the model's real output space (core_idx_tensor, "
+                f"{T} slots); the model is not constrained to point inside the "
+                "peptide, so this is chance for what it actually emits",
+            "B_uniform_over_anchor_windows":
+                "uniform over the anchor's own 9-mer windows; chance GIVEN that "
+                "the peptide's location is already known -- it credits locating "
+                "the peptide and asks only about register",
+        },
+        "note": "Enumerated per case, not 1/n: same_core compares the 9-mer "
+                "STRING, so a repeated 9-mer inside one peptide counts as a "
+                "match at two indices.",
+        "conditions": {},
+    }
+    for cond in ("shift_flank", "shift_pad"):
+        sub = d[d.condition == cond]
+        if sub.empty:
+            continue
+        a, b = baselines(d, cond)
+        measured = float(sub.same_core.mean())
+        out["conditions"][cond] = {
+            "chance_A_output_space": a,
+            "chance_B_position_known": b,
+            "measured_same_core_rate": measured,
+            "measured_over_chance_A": (measured / a) if a else None,
+            "measured_over_chance_B": (measured / b) if b else None,
+            "n_variant_rows": int(len(sub)),
+            "n_cases": int(sub.case_id.nunique()),
+        }
+    jpath = os.path.join(run_dir, "core_calibration_baselines.json")
+    with open(jpath, "w") as fh:
+        json.dump(out, fh, indent=2)
+    print(f"wrote {jpath}")
+    for cond, v in out["conditions"].items():
+        print(f"  {cond:12s} measured {v['measured_same_core_rate']:.4f} | "
+              f"chance A {v['chance_A_output_space']:.4f} "
+              f"({v['measured_over_chance_A']:.2f}x) | "
+              f"chance B {v['chance_B_position_known']:.4f} "
+              f"({v['measured_over_chance_B']:.2f}x)")
+
 
 if __name__ == "__main__":
     main()

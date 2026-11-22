@@ -1,0 +1,25 @@
+{
+  "fold": 1,
+  "best_epoch": 334,
+  "best_val_loss": 10.120793342590332,
+  "val_metrics": {
+    "n": 5126,
+    "n_pos": 237,
+    "auroc": 0.8638267427178726,
+    "auprc": 0.37738850986086664,
+    "pearson_r": 0.6973033316837044,
+    "mse": 0.03722836187377479
+  },
+  "selected_on": "auprc",
+  "selected_score": 0.37738850986086664,
+  "alt_selection": {
+    "composite": {
+      "score": 0.7909109845030726,
+      "epoch": 376
+    },
+    "rmax": {
+      "score": 0.7120899509716325,
+      "epoch": 571
+    }
+  }
+}

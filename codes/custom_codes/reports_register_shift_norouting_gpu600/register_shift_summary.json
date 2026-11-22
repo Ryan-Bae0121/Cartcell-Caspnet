@@ -1,0 +1,152 @@
+{
+  "args": {
+    "ckpt_dir": "reports_phase3_norouting_gpu600/checkpoints",
+    "out_dir": "reports_register_shift_norouting_gpu600",
+    "n_cases": 300,
+    "total_len": 21,
+    "max_anchor_len": 17,
+    "n_resample": 12,
+    "seed": 0,
+    "model": "phase3",
+    "config": "config/norouting_gpu600.json"
+  },
+  "thresholds_affinity": {
+    "500nM": 0.4256251898085073,
+    "50nM": 0.6384377847127609
+  },
+  "pseudo_sequence_warning": "0/68 alleles use placeholder pseudo-sequences; all are real.",
+  "leakage_audit": {
+    "n_variants": 16468,
+    "exact_pair_in_train": 0,
+    "seq_in_train_any_allele": 3219,
+    "core9_in_train_same_allele": 1783,
+    "note": "exact_pair_in_train must be ~0 for the experiment to be clean. core9_in_train_same_allele is high BY DESIGN -- the anchors reuse real peptides, so their cores were seen in training. This experiment measures prediction stability, not generalisation to unseen cores."
+  },
+  "condition_summary": [
+    {
+      "condition": "core_mutate",
+      "n_cases": 300,
+      "median_yhat_sd": 0.1069705590195972,
+      "median_yhat_range": 0.3660829499363899,
+      "median_mean_absdev": 0.1332531004057576,
+      "median_max_absdev": 0.30041331704705954,
+      "median_prob_range": 0.0932767629623413,
+      "median_flip_500nM": 0.16666666666666666,
+      "mean_flip_500nM": 0.3219444444444444,
+      "mean_same_core_rate": 0.155,
+      "mean_core_drift": 2.473888888888889,
+      "mean_core_conf": 0.3938215357479122,
+      "same_core_moved": NaN,
+      "fixed_index_moved": NaN
+    },
+    {
+      "condition": "flank_resample",
+      "n_cases": 300,
+      "median_yhat_sd": 0.04784094953017358,
+      "median_yhat_range": 0.1659415142610669,
+      "median_mean_absdev": 0.058429615882535764,
+      "median_max_absdev": 0.1391220360994339,
+      "median_prob_range": 0.002358904480934121,
+      "median_flip_500nM": 0.0,
+      "mean_flip_500nM": 0.1572222222222222,
+      "mean_same_core_rate": 0.4166666666666667,
+      "mean_core_drift": 2.5225,
+      "mean_core_conf": 0.36281073844681183,
+      "same_core_moved": 0.4166666666666667,
+      "fixed_index_moved": 0.041944444444444444
+    },
+    {
+      "condition": "scramble_all",
+      "n_cases": 300,
+      "median_yhat_sd": 0.08790557962582372,
+      "median_yhat_range": 0.2986063756048679,
+      "median_mean_absdev": 0.12816847260304107,
+      "median_max_absdev": 0.2681022775825113,
+      "median_prob_range": 0.09236387312412261,
+      "median_flip_500nM": 0.08333333333333333,
+      "mean_flip_500nM": 0.2608333333333333,
+      "mean_same_core_rate": 0.115,
+      "mean_core_drift": 2.762777777777778,
+      "mean_core_conf": 0.3936767913235559,
+      "same_core_moved": NaN,
+      "fixed_index_moved": NaN
+    },
+    {
+      "condition": "shift_flank",
+      "n_cases": 300,
+      "median_yhat_sd": 0.051988387387124746,
+      "median_yhat_range": 0.15923728048801417,
+      "median_mean_absdev": 0.06210083408015114,
+      "median_max_absdev": 0.1419936828315258,
+      "median_prob_range": 0.001389649510383617,
+      "median_flip_500nM": 0.0,
+      "mean_flip_500nM": 0.17019576719576718,
+      "mean_same_core_rate": 0.40946428571428567,
+      "mean_core_drift": 2.8997671957671955,
+      "mean_core_conf": 0.36763368240777383,
+      "same_core_moved": 0.4091111111111111,
+      "fixed_index_moved": 0.04012301587301587
+    },
+    {
+      "condition": "shift_pad",
+      "n_cases": 300,
+      "median_yhat_sd": 0.027696628492756385,
+      "median_yhat_range": 0.08764875382184983,
+      "median_mean_absdev": 0.04438606758009303,
+      "median_max_absdev": 0.07974676899611952,
+      "median_prob_range": 8.239448070526678e-05,
+      "median_flip_500nM": 0.0,
+      "mean_flip_500nM": 0.13879966329966328,
+      "mean_same_core_rate": 0.5496013986013986,
+      "mean_core_drift": 2.1330778295778297,
+      "mean_core_conf": 0.3733340050263576,
+      "same_core_moved": 0.5136094276094276,
+      "fixed_index_moved": 0.04623063973063973
+    }
+  ],
+  "verdict": {
+    "shift_flank_range_over_flank_resample_range": 0.9595988152638807,
+    "core_mutate_dev_over_shift_flank_dev": 2.1457537950903043,
+    "scramble_all_dev_over_shift_flank_dev": 2.063876830343679,
+    "reading": "ratio_1 near 1 => position adds no instability beyond flank identity. ratio_2 and ratio_3 >> 1 => the model is sensitive to content, so the invariance is not the degenerate kind. ratio_3 specifically rules out a composition-only (bag-of-amino-acids) model.",
+    "core_tracking": {
+      "shift_pad": {
+        "same_core_rate": 0.5136094276094276,
+        "fixed_index_rate": 0.04623063973063973,
+        "mean_core_drift": 2.1330778295778297
+      },
+      "shift_flank": {
+        "same_core_rate": 0.4091111111111111,
+        "fixed_index_rate": 0.04012301587301587,
+        "mean_core_drift": 2.8997671957671955
+      },
+      "reading": "same_core_rate is the answer to 'does it find the same 9-mer when the position changes'. fixed_index_rate is the competing explanation -- the model pointing at a fixed absolute slot regardless of where the peptide went. High same_core with low fixed_index means real tracking; the reverse means a positional habit that prediction-stability alone would have hidden."
+    },
+    "paired_tests": {
+      "shift_flank_gt_flank_resample": {
+        "n_cases": 300,
+        "median_a": 0.15923728048801417,
+        "median_b": 0.1659415142610669,
+        "statistic": 21941.0,
+        "p_value": 0.6633461620312606,
+        "alternative": "greater"
+      },
+      "core_mutate_gt_shift_flank": {
+        "n_cases": 300,
+        "median_a": 0.1332531004057576,
+        "median_b": 0.06210083408015114,
+        "statistic": 44115.0,
+        "p_value": 7.72546041876231e-47,
+        "alternative": "greater"
+      },
+      "scramble_all_gt_shift_flank": {
+        "n_cases": 300,
+        "median_a": 0.12816847260304107,
+        "median_b": 0.06210083408015114,
+        "statistic": 42776.0,
+        "p_value": 1.9173526709879205e-41,
+        "alternative": "greater"
+      }
+    }
+  }
+}

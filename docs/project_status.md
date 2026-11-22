@@ -117,7 +117,59 @@ anchor가 실제 peptide를 재사용하므로. 이 실험은 **예측 안정성
 | Phase3 (routing 3) | **0.403** | 0.053 |
 | Phase3 no-routing | **0.420** | 0.045 |
 
-랜덤 9-mer 일치 기대값(null)이 **0.416**입니다. 세 모델 전부 null과 구분되지 않습니다.
+> **정정 (2026-11-21) — 0.416은 null이 아닙니다.** 이전 판은 "랜덤 9-mer 일치
+> 기대값(null) 0.416"이라고 적었습니다. **틀린 라벨입니다.** 0.416의 출처는
+> `reports_register_shift_final/register_shift_summary.json` →
+> `condition_summary[1]` (`condition = "flank_resample"`) 의
+> `mean_same_core_rate = 0.41556`, 즉 **Phase2의 `flank_resample` 대조군 값**입니다.
+> `flank_resample`은 [`register_shift.py`](../codes/custom_codes/register_shift.py)
+> 주석대로 *"flanks resampled R times at a FIXED j"* — **위치를 고정하고 flank만
+> 교체**하는 조건입니다. 무작위 기대값이 아니라 **측정값**이고, `shift_flank`와
+> 같은 성질의 양입니다.
+>
+> 실제 chance level은 [`plot_core_calibration.py`](../codes/custom_codes/plot_core_calibration.py)
+> 의 `baselines()`가 열거법으로 계산합니다 — 기준 A(모델 출력공간 T=17 슬롯 균등),
+> 기준 B(anchor 자신의 9-mer window 균등). 이 값이 **PNG에만 그려지고 JSON에
+> 저장되지 않았던 것**이 두 달간 라벨 오류가 남은 직접적 원인입니다. 이제
+> `core_calibration_baselines.json`으로 저장합니다.
+
+**chance 대비 배수 (2026-11-22, §5.9 GPU 5-fold 체크포인트 기준).**
+출처: `reports_register_shift_{phase2,phase3,norouting}_gpu600/core_calibration_baselines.json`
+→ `conditions.shift_flank`. 2,084 variant 행 / 300 case.
+
+| 모델 | 측정 `shift_flank` | 기준 A (출력공간 17슬롯) | A 대비 | 기준 B (위치 기지) | B 대비 |
+|---|---|---|---|---|---|
+| Phase2 | 0.4175 | 0.0549 | **7.60×** | 0.1332 | **3.13×** |
+| Phase3 | 0.4040 | 0.0518 | **7.81×** | 0.1251 | **3.23×** |
+| no-routing | 0.4064 | 0.0533 | **7.62×** | 0.1290 | **3.15×** |
+
+**"무작위와 구분되지 않는다"는 완전히 틀린 진술이었습니다.** core 선택은 가장
+보수적인 기준(B: peptide 위치를 이미 안다고 가정)으로도 chance의 **3.1–3.2배**,
+모델이 실제로 내놓는 출력공간 기준(A)으로는 **7.6–7.8배**입니다. 세 모델이 거의
+동일한 배수를 보입니다.
+
+따라서 §4.1의 주장은 "무작위"가 아니라 **"대조군 대비 차이가 없다"**로
+바뀝니다:
+
+| 모델 | `flank_resample` (위치 고정) | `shift_flank` (위치 이동) | 차이 |
+|---|---|---|---|
+| Phase2 | 0.4150 | 0.4198 | +0.005 |
+| Phase3 | 0.4250 | 0.4069 | −0.018 |
+| no-routing | 0.4167 | 0.4095 | −0.007 |
+
+**위치를 옮기는 것이 flank만 바꾸는 것과 다를 바 없습니다.** 즉 core 선택의
+불안정성은 **위치 이동과 무관**합니다 — 문맥이 조금이라도 바뀌면 다른 9-mer를
+집고, 그 교체율은 peptide가 실제로 움직였는지 여부에 거의 반응하지 않습니다.
+
+> **차이의 부호는 재현되지 않습니다.** CPU 런에서는 Phase3 +0.005 /
+> no-routing +0.010 (즉 `shift_flank`가 더 높음)이었는데, GPU 런에서는 각각
+> −0.018 / −0.007로 **부호가 뒤집혔습니다**. Phase2도 −0.004 → +0.005로
+> 뒤집혔습니다. 세 모델 전부 부호가 반대로 나왔으므로 **±0.02 수준의 이
+> 차이는 noise이고, 방향성을 해석해서는 안 됩니다.** 이전 판에 적었던
+> "Phase3·no-routing은 shift_flank가 오히려 높다 — 위치 이동에 페널티가
+> 없다는 뜻"이라는 문장은 **철회합니다.** 남는 주장은 부호 없는 쪽,
+> 즉 "두 조건의 차이가 0에 가깝다"입니다.
+
 `fixed_index_rate`가 0.05로 낮으니 "그냥 고정 위치를 집는다"는 경쟁 설명도 아닙니다 —
 **위치를 옮기면 다른 9-mer를 집습니다.**
 
@@ -347,6 +399,107 @@ Phase2가 −0.032만큼 앞서고, 각 모델의 r 최대끼리 비교하면 �
 
 ---
 
+### 5.9 사전 등록 프로토콜 — GPU 5-fold 재학습 (2026-11-21)
+
+§5.8이 1 fold val 궤적이라 결론을 쓸 수 없었습니다. 이 절은 **실행 전에** 확정한
+규칙입니다. 결과를 보고 규칙을 고치지 않기 위해 미리 적어 둡니다.
+
+#### 환경 이전 — CPU → RTX 4090
+
+| 모델 | CPU s/epoch | GPU s/epoch | 배속 |
+|---|---|---|---|
+| Phase2 | ~49 | **4.0** | 12.3× |
+| Phase3 | ~64 | **6.9** | 9.3× |
+| no-routing | ~50 | **5.75** | 8.7× |
+
+CPU 기준값은 `reports_probe_*_long/trace/*.jsonl`의 `secs` 필드 중 오염되지 않은
+구간(ep 0–199)에서 가져왔습니다. 15 run × 600 epoch = **약 13.9시간**
+(CPU로는 136시간).
+
+**GPU 이전에서 고친 버그 3개** — 전부 CPU 전용 경로에서는 드러나지 않던 것입니다:
+
+| 파일 | 문제 | 수정 |
+|---|---|---|
+| `train_phase2.py:140` | `vt = torch.tensor(0.0)`이 CPU에 생성되어 cuda loss 누적 시 `RuntimeError` | `torch.zeros((), device=DEVICE)` |
+| `train_phase3.py:160` | 동일 | 동일 |
+| `diag_routing_iters.py:72` | routing `b`가 CPU, `c.numpy()`가 cuda 텐서에서 실패 | `device=u_hat.device`, `.detach().cpu().numpy()` |
+
+**GPU utilization은 median 34%입니다** (30회 샘플, min 30 / max 44). 병목은 GPU가
+아니라 `batch_size = 32`입니다. 벤치마크: 데이터셋 전체가 89.6 MB로 GPU에 1.3초면
+올라가고, GPU 상주 인덱싱 + bs=256이면 train epoch이 9.2배, bs=1024면 37배
+빨라집니다. **그래도 bs=32를 유지합니다** — §5.6–5.8의 모든 프로브가 bs=32였고,
+배치/lr을 바꾸면 "예산이 만든 착시"라는 현재 결론에 **두 번째 변인**이 들어갑니다.
+13.9시간은 하룻밤에 들어가므로 재현성을 속도와 바꿀 이유가 없습니다.
+
+#### 확정된 설정
+
+| 항목 | 값 | 근거 |
+|---|---|---|
+| **epochs** | **600** | 400에서 Phase2 복합 peak @370, no-routing @392 — **셋 중 둘이 천장에 붙어** 예산 반론을 닫지 못합니다 |
+| **미수렴 판정** | **선택 epoch ≥ 540이면 그 모델은 미수렴으로 보고 예산을 늘린다** | 사전 규칙. 사후에 "충분했다"고 주장하지 않기 위함 |
+| **선택 기준 (주)** | **AUPRC** | 5% 양성 클래스의 올바른 요약이고, **회귀 지표와 독립**이라 Pearson r 비교가 순환이 아닙니다 |
+| 선택 기준 (민감도) | 복합 `(auroc+pearson_r)/2` | §5.8이 쓴 규칙 |
+| 선택 기준 (참조) | 각 모델의 `pearson_r` 최대 | 선택 규칙과 무관한 상한 |
+| batch_size | 32 | 위 참조 |
+| lr / weight_decay / grad_clip | 2e-4 / 1e-6 / 1.0 | 변경 없음 |
+| λ_reg | **0.5 (세 모델 동일)** | 커밋 `8526eee`에서 이미 통일됨 (§5.1b) |
+| seed / n_folds / split | 42 / 5 / `KFold(shuffle=True, random_state=42)` | 세 모델 전수 확인 동일 |
+| pseudo-sequence | `mhc_ii_pseudo.csv` (실서열) | 세 모델 동일 |
+| `core_conditioning` | true | 세 모델 동일 |
+| `entropy_beta` | 0.01 | 세 모델 동일 |
+| `auto_pos_weight` | true (18.71) | 세 모델 동일 |
+| `routing_iters` | 3 / 1 | **의도된 ablation** |
+| **`dropout`** | **0.5 / 0.3 / 0.3 — 통일하지 않음** | 아래 한계 참조 |
+
+설정 파일: `config/phase2_gpu600.json`, `config/phase3_gpu600.json`,
+`config/norouting_gpu600.json`. 출력: `reports_*_gpu600/`.
+
+> **한계 — `dropout`을 통일하지 않은 이유.** 값만 보면 불일치(0.5 vs 0.3)지만
+> **적용 위치가 다릅니다**: Phase2는 MLP head에 `nn.Dropout` 2개
+> (`models/phase2.py:48,51`), Phase3는 capsule projection 입력에 1개
+> (`models/phase3.py:88`). 같은 이름의 다른 하이퍼파라미터이므로 숫자를 맞추는
+> 것은 "공정하게 만드는" 조작이 아닙니다. 아키텍처별 재튜닝이 원칙적으로 맞지만
+> 현재 질문(routing이 기여하는가)에 필요하지 않아 **현재값을 유지하고 한계로
+> 명시합니다.**
+
+#### 선택 규칙이 결론의 부호를 바꿉니다 — 이것 자체가 결과입니다
+
+400-epoch 프로브(fold 0 val)에서 **Phase3 − Phase2 (Pearson r)**:
+
+| 선택 규칙 | 고른 epoch (P2/P3) | Phase3 − Phase2 | 부호 |
+|---|---|---|---|
+| AUPRC (주) | 156 / 227 | **+0.037** | 회귀 우위 **있음** |
+| 복합 (민감도) | 370 / 160 | **−0.032** | 회귀 우위 **없음** |
+| 각자 r 최대 (참조) | 372 / 299 | **−0.007** | 사실상 동률 |
+
+**AUPRC 선택이 Phase3에 유리한 이유는 routing이 아닙니다.** Phase2는 AUPRC가
+@156에서 최대인데 그 지점의 r이 0.6703이고, 자기 r 최대는 @372의 0.7308입니다 —
+**0.06 떨어진 지점에서 평가받습니다.** Phase3는 AUPRC @227에서 r=0.7068,
+r 최대 @299에서 0.7243으로 간격이 0.018뿐입니다. 즉 **Phase2의 두 헤드가 서로
+멀리서 peak**하고, AUPRC 기준은 그 간격에 벌점을 줍니다. capsule 구조의 이득이
+아니라 **두 헤드의 수렴 시점 불일치**가 만드는 차이입니다.
+
+> **결론 금지 조항.** 위 세 숫자는 **fold 0 단일 측정**입니다. ±0.03은 5-fold
+> 부트스트랩 CI 안에 들어갈 가능성이 높습니다. **5-fold + CI가 나오기 전까지
+> 어느 부호도 결론으로 쓰지 않습니다.** 보고는 세 규칙 전부를, 부호가 규칙에
+> 의존한다는 사실과 함께 적습니다.
+
+#### 측정 항목과 집계
+
+세 규칙 각각의 체크포인트를 fold별로 저장합니다
+(`checkpoints/{prefix}_fold{k}.pt`, `.pt.composite`, `.pt.rmax`;
+`fold_report_{k}.json`의 `alt_selection`에 규칙별 선택 epoch 기록).
+core tracking과 성능은 **동일 체크포인트**에서 뽑습니다.
+
+- **성능:** AUROC, AUPRC, Pearson r, MSE — **test 기준** (val peak 아님)
+- **core tracking:** `same_core_rate`, 평균 밀림(`mean_core_drift`)
+- **부트스트랩 CI 1000회**, fold별 값도 따로 보고
+
+> **CPU 결과와 섞지 않습니다.** §5.2/§5.3/§5.8은 CPU 런이고 예산·선택 기준이
+> 다릅니다. §5.9의 표에는 **이번 GPU 런에서 새로 나온 세 모델만** 들어갑니다.
+
+---
+
 ## 6. 결과 (3) — routing은 왜 기여가 없는가 (메커니즘)
 
 "routing 제거해도 같다"는 결과에는 전혀 다른 두 설명이 있습니다:
@@ -434,16 +587,25 @@ routing 기여는 여전히 0입니다(400 예산 no-routing − Phase3 = **+0.0
 ## 7. 논문에 쓸 서술
 
 가설 세 조항은 그대로 기각입니다. 대신 훨씬 구체적인 대체 서술이 섰습니다.
-**단, 괄호 안의 회귀 숫자는 재학습 뒤에 채워야 합니다**(§5.6):
+**회귀 숫자는 §5.9 GPU 5-fold로 채웠습니다** (test, paired bootstrap 1000회;
+출처 `reports_gpu600_aggregate.json`):
 
 > CapsNet은 register를 식별해서 잘하는 게 아니다. core 추적은 CNN과 같고
-> (0.403 vs 0.412, null 0.416) 서열 민감도는 오히려 낮다
-> (scramble 비 0.81× vs 1.48×). **공정 예산에서는 회귀 우위도 남지 않는다**
-> (Pearson r **−0.032**, 400 epoch 1 fold — 5-fold CI 재산출 필요).
-> 그 이득은 dynamic routing에서 오지 않는다(+0.002, p=0.373) —
-> routing의 coupling은 입력 의존 성분이 9–12%에 불과해 고정 재가중과 구분되지 않으며,
-> 반복을 10회로 늘려도 그 비율이 평평하다. 예산을 8배로 늘려 `W`가 init의
-> **9–15배**까지 자란 뒤에도 기여는 여전히 0이다.
+> (`shift_flank` 0.407 vs 0.420 — 둘 다 위치를 이미 안다고 가정한 chance의
+> 3.2배 / 3.1배로, **"무작위 null 0.416"은 철회한다**, §4.1 정정 참조)
+> 서열 민감도는 오히려 낮다 (scramble 비 0.81× vs 1.48×).
+> **회귀 우위의 부호는 체크포인트 선택 규칙에 의존한다**: 사전 등록한 AUPRC
+> 기준에서 Pearson r은 **+0.038** [+0.031, +0.045] p=0.001로 CapsNet이
+> 유리하지만, 복합 기준에서는 **−0.014** [−0.020, −0.008] p=0.001로
+> 부호가 뒤집히고 **두 방향 모두 CI가 0을 배제한다**. 어느 쪽도 단독으로
+> 인용할 수 없다. 반면 분류 성능은 세 규칙 전부에서 CapsNet이 낮다
+> (AUROC −0.036 [−0.052, −0.019], AUPRC −0.043 [−0.075, −0.007]).
+> 그리고 그 어떤 이득도 dynamic routing에서 오지 않는다 — routing을 끈
+> 모델과의 차이는 Pearson r **−0.001** [−0.006, +0.003] p=0.542,
+> AUPRC **+0.007** [−0.023, +0.038] p=0.672로 **CI가 0을 포함한다**.
+> routing의 coupling은 입력 의존 성분이 9–12%에 불과해 고정 재가중과
+> 구분되지 않으며, 반복을 10회로 늘려도 그 비율이 평평하다. 예산을 600
+> epoch으로 늘려 `W`가 init의 **9–15배**까지 자란 뒤에도 기여는 여전히 0이다.
 > **남는 것은 capsule 구조의 이득이 아니라, 예산이 만든 착시였다.**
 
 **취소선 그을 문장:** 이전 판은 여기에 *"회귀는 확실히 낫다 (+0.128,
